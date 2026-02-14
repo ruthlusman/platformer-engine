@@ -1,35 +1,56 @@
 #include <raylib.h>
 
+struct Player {
+    float x;
+    float y;
+    float width;
+    float height;
+    float speed;
+    float jump;
+    Vector2 velocity;
+    [[nodiscard]] Rectangle getRect() const {
+        return {x, y , width, height};
+    }
+};
+
+struct Floor {
+    float x;
+    float y;
+    float width;
+    float height;
+    [[nodiscard]] Rectangle getRect() const {
+        return {x, y, width, height};
+    }
+};
+
 // variables
 constexpr int windowWidth = 800;
 constexpr int windowHeight = 600;
 
-Rectangle playerRect = {windowWidth/2.0f, windowHeight/2.0f, 50, 50};
-Vector2 playerDirection{};
-float playerSpeed = 400;
+Player player = {windowWidth/2.0f, windowWidth/2.0f, 50, 50, 400, -600.0f, {}};
 
 constexpr int gravity = 1200;
-float velocity{};
 constexpr float maxFallSpeed = 800.0f;
 constexpr float playerJump = -600.0f;
 
-Rectangle floorRect = {0, windowHeight-150, windowWidth, 75};
+Floor floor = {0, windowHeight-150, windowWidth, 55};
 
 // functions
 void playerInput(const float dt) {
-    playerDirection.x = static_cast<float>(IsKeyDown(KEY_RIGHT)) - static_cast<float>(IsKeyDown(KEY_LEFT));
-    playerRect.x += playerDirection.x * playerSpeed * dt;
+    player.velocity.x = (static_cast<float>(IsKeyDown(KEY_RIGHT)) - static_cast<float>(IsKeyDown(KEY_LEFT))) * player.speed;
+    player.x += player.velocity.x * dt;
 }
 
 void playerGravity(const float dt) {
-    if (IsKeyPressed(KEY_SPACE)) {velocity = playerJump;}
-    velocity += gravity * dt;
-    if (velocity >= maxFallSpeed) {velocity = maxFallSpeed;}
-    playerRect.y += velocity * dt;
+    if (IsKeyPressed(KEY_SPACE)) {player.velocity.y = playerJump;}
+    player.velocity.y += gravity * dt;
+    if (player.velocity.y >= maxFallSpeed) {player.velocity.y = maxFallSpeed;}
+    player.y += player.velocity.y * dt;
+
 }
 
 int main() {
-    InitWindow(windowWidth, windowHeight, "raylib");
+    InitWindow(windowWidth, windowHeight, "platformer");
     SetTargetFPS(60);
 
     while (!WindowShouldClose()) {
@@ -40,9 +61,16 @@ int main() {
 
         BeginDrawing();
         ClearBackground(BLACK);
-        DrawRectangleRec(playerRect, BLUE); // player
+        DrawRectangleRec(player.getRect(), BLUE); // player
+        DrawRectangleRec(floor.getRect(), WHITE); // floor
 
-        DrawRectangleRec(floorRect, WHITE);
+        if (CheckCollisionRecs(player.getRect(), floor.getRect())) {
+            // floor and ceilings
+            if (player.velocity.y > 0) {player.y = floor.y - player.width;}
+            else if (player.velocity.y < 0) {player.y = floor.y + floor.height;}
+            player.velocity.y = 0;
+
+        }
         EndDrawing();
     }
 
