@@ -1,8 +1,8 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <cmath>
-#include <iostream>
 
+// classes
 struct Player {
     Vector2 pos;
     float width;
@@ -43,7 +43,6 @@ Solid wall2 = {600, floor1.pos.y-150, 50, 150};
 
 Solid objects[3] = {floor1, wall1, wall2};
 
-
 // functions
 void playerMovement(const float dt) {
     // horizontal
@@ -80,20 +79,32 @@ void collisions() {
 // main window and loop
 int main() {
     InitWindow(windowWidth, windowHeight, "platformer");
-    SetTargetFPS(60);
 
+    Camera2D camera = {0};
+    camera.target = (Vector2){player.pos.x + 20.0f, player.pos.y + 20.0f};
+    camera.offset = (Vector2){windowWidth/2.0f, windowHeight/2.0f};
+    camera.rotation = 0.0f;
+    camera.zoom = 1.0f;
+
+    SetTargetFPS(60);
     while (!WindowShouldClose()) {
         const float dt = GetFrameTime();
+        camera.target = (Vector2){ player.pos.x + player.width/2, player.pos.y + player.height/2};
 
         playerMovement(dt);
         collisions();
 
         BeginDrawing();
+
         ClearBackground(BLACK);
+
+        BeginMode2D(camera);
         DrawRectangleRec(player.getRect(), BLUE); // player
         DrawRectangleRec(floor1.getRect(), WHITE); // floor
         DrawRectangleRec(wall1.getRect(), WHITE); // small wall
         DrawRectangleRec(wall2.getRect(), WHITE); // big wall
+        EndMode2D();
+
         EndDrawing();
     }
 
